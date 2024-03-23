@@ -2,99 +2,77 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 using namespace std;
 
 class armour {
 public:
     string name;
-    double stat[14]{};
+    double weight{};
+    double stat[13]{};
 };
-
+vector<armour> preProcess(vector<armour> &armours, double remaining_weight, int priority) {
+    map<double,armour> m;
+    for (int i = 0; i < armours.size(); i++) {
+        if (armours[i].weight > remaining_weight) {
+            armours.erase(armours.begin() + i);
+            i--;
+        }
+        else
+        {
+            if(m.find(armours[i].weight) == m.end())
+            {
+                m[armours[i].weight] = armours[i];
+            }
+            else
+            {
+                if(armours[i].stat[priority] > m[armours[i].weight].stat[priority])
+                {
+                    m[armours[i].weight] = armours[i];
+                }
+            }
+        }
+    }
+    vector<armour> newArmours;
+    newArmours.reserve(m.size());
+for(auto & i : m)
+    {
+        newArmours.insert(newArmours.begin(),i.second);
+    }
+    return newArmours;
+}
+vector<armour> readData(const string& path) {
+    ifstream file;
+    file.open(path);
+    if (!file.is_open()) {
+        cout << "Error opening file" << '\n';
+        return {};
+    }
+    vector<armour> armours;
+    while (!file.eof()) {
+        armour a;
+        getline(file, a.name, ';');
+        for (double & i : a.stat) {
+            string s;
+            getline(file, s, ';');
+            i = atof(s.c_str());
+        }
+        string s;
+        getline(file, s);
+        a.weight = atof(s.c_str());
+        armours.push_back(a);
+    }
+    file.close();
+    return armours;
+}
 int main() {
-    ifstream helm, chest, gauntlet, leg;
-    helm.open(R"(../res/Helms.csv)");
-    if (!helm.is_open()) {
-        cout << "Error opening file" << '\n';
-        return 0;
-    }
-    chest.open(R"(../res/ChestArmour.csv)");
-    if (!chest.is_open()) {
-        cout << "Error opening file" << '\n';
-        return 0;
-    }
-    gauntlet.open(R"(../res/Gauntlets.csv)");
-    if (!gauntlet.is_open()) {
-        cout << "Error opening file" << '\n';
-        return 0;
-    }
-    leg.open(R"(../res/LegArmour.csv)");
-    if (!leg.is_open()) {
-        cout << "Error opening file" << '\n';
-        return 0;
-    }
-    vector<armour> helms;
-    vector<armour> chests;
-    vector<armour> gauntlets;
-    vector<armour> legs;
-    while (!helm.eof()) {
-        armour a;
-        getline(helm, a.name, ';');
-        for (int i = 0; i < 13; i++) {
-            string s;
-            getline(helm, s, ';');
-            a.stat[i] = atof(s.c_str());
-        }
-        string s;
-        getline(helm, s);
-        a.stat[13] = atof(s.c_str());
-        helms.push_back(a);
-    }
-    while (!chest.eof()) {
-        armour a;
-        getline(chest, a.name, ';');
-        for (int i = 0; i < 13; i++) {
-            string s;
-            getline(chest, s, ';');
-            a.stat[i] = atof(s.c_str());
-        }
-        string s;
-        getline(chest, s);
-        a.stat[13] = atof(s.c_str());
-        chests.push_back(a);
-    }
-    while (!gauntlet.eof()) {
-        armour a;
-        getline(gauntlet, a.name, ';');
-        for (int i = 0; i < 13; i++) {
-            string s;
-            getline(gauntlet, s, ';');
-            a.stat[i] = atof(s.c_str());
-        }
-        string s;
-        getline(gauntlet, s);
-        a.stat[13] = atof(s.c_str());
-        gauntlets.push_back(a);
-    }
-    while (!leg.eof()) {
-        armour a;
-        getline(leg, a.name, ';');
-        for (int i = 0; i < 13; i++) {
-            string s;
-            getline(leg, s, ';');
-            a.stat[i] = atof(s.c_str());
-        }
-        string s;
-        getline(leg, s);
-        a.stat[13] = atof(s.c_str());
-        legs.push_back(a);
-    }
-    helm.close();
-    chest.close();
-    gauntlet.close();
-    leg.close();
+    vector<armour> helms = readData(R"(../res/Helms.csv)");
+    vector<armour> chests = readData(R"(../res/ChestArmour.csv)");
+    vector<armour> gauntlets = readData(R"(../res/Gauntlets.csv)");
+    vector<armour> legs = readData(R"(../res/LegArmour.csv)");
     attributeSelect:
-    cout << "Which attribute do you want to prioritize?" << '\n'
+    cout << "Which attribute do you want to maximise?" << '\n'
          << "Physical - 1" << '\n'
          << "Vs Strike - 2" << '\n'
          << "Vs Slash - 3" << '\n'
@@ -111,36 +89,9 @@ int main() {
     int priority;
     cin >> priority;
     priority--;
-    switch (priority) {
-        case 0:
-            break;
-        case 1:
-            break;
-        case 2:
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
-        case 5:
-            break;
-        case 6:
-            break;
-        case 7:
-            break;
-        case 8:
-            break;
-        case 9:
-            break;
-        case 10:
-            break;
-        case 11:
-            break;
-        case 12:
-            break;
-        default:
-            cout << "Wrong input" << '\n';
-            goto attributeSelect;
+    if (priority < 0 || priority > 12) {
+        cout << "Wrong input" << '\n';
+        goto attributeSelect;
     }
     double max_load, current_weight;
     Weight:
@@ -174,34 +125,39 @@ int main() {
         cout << "Error - you are already overloaded" << '\n';
         goto Weight;
     }
+    double remaining_weight = ratio * max_load - current_weight;
+    helms = preProcess(helms, remaining_weight, priority);
+    chests = preProcess(chests, remaining_weight, priority);
+    gauntlets = preProcess(gauntlets, remaining_weight, priority);
+    legs = preProcess(legs, remaining_weight, priority);
     Calculations:
     double maxStat = 0;
     int maxSet[4] = {0};
     for (int i = 0; i < chests.size(); i++) {
-        double x = current_weight, a = 0;
-        x += chests[i].stat[13];
-        if (x >= ratio * max_load) {
+        double x = 0, a = 0;
+        x += chests[i].weight;
+        if (x >= remaining_weight) {
             continue;
         }
         a += chests[i].stat[priority];
         for (int j = 0; j < legs.size(); j++) {
             double y = x, b = a;
-            y += legs[j].stat[13];
-            if (y >= ratio * max_load) {
+            y += legs[j].weight;
+            if (y >= remaining_weight) {
                 continue;
             }
             b += legs[j].stat[priority];
             for (int k = 0; k < helms.size(); k++) {
                 double z = y, c = b;
-                z += helms[k].stat[13];
-                if (z >= ratio * max_load) {
+                z += helms[k].weight;
+                if (z >= remaining_weight) {
                     continue;
                 }
                 c += helms[k].stat[priority];
                 for (int l = 0; l < gauntlets.size(); l++) {
                     double w = z, d = c;
-                    w += gauntlets[l].stat[13];
-                    if (w >= ratio * max_load) {
+                    w += gauntlets[l].weight;
+                    if (w >= remaining_weight) {
                         continue;
                     }
                     d += gauntlets[l].stat[priority];
@@ -227,8 +183,8 @@ int main() {
          << "2 - " << chests[maxSet[1]].name << '\n'
          << "3 - " << gauntlets[maxSet[2]].name << '\n'
          << "4 - " << legs[maxSet[3]].name << '\n';
-    cout << "Do you lack one of these? Enter number from 1 to 4 to exclude the "
-            "item from further calculations or 0 to exit the program."
+    cout << "Do you lack one of these? Enter number from 1 to 4 to exclude that"
+            "item and rerun the computations or 0 to exit the program."
          << '\n';
     int input2;
     cin >> input2;
